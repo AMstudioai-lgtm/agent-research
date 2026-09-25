@@ -1,0 +1,6 @@
+{
+  "name": "Research Agent",
+  "description": "Interface pédagogique d'un agent de recherche préparant et structurant des plans de recherche avant exécution.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
