@@ -1,4 +1,4 @@
-// Statuts de l'agent dans son cycle de vie (toujours "PLANIFIÉ" en V1)
+// Statuts de l'agent dans son cycle de vie (V1: PLANIFIÉ, V2+: EN_COURS, EN_ATTENTE_INFO, TERMINÉ)
 export type AgentStatus = 'PLANIFIÉ' | 'EN_COURS' | 'EN_ATTENTE_INFO' | 'TERMINÉ';
 
 // Tâche individuelle séquentielle identifiée par l'agent
@@ -51,10 +51,84 @@ export interface ResearchPlan {
   fallbackNotice?: string;
 }
 
+// ==================== V2: Outils réels & Human-in-the-loop ====================
+
+// Outils disponibles pour l'agent
+export type ToolName = 'search_web' | 'read_document' | 'save_result' | 'query_database';
+
+// Paramètres d'un appel d'outil
+export interface ToolParameters {
+  query?: string;
+  url?: string;
+  limit?: number;
+  key?: string;
+  data?: unknown;
+  [key: string]: unknown;
+}
+
+// Appel d'outil en attente d'approbation
+export interface PendingToolCall {
+  id: string;
+  name: ToolName;
+  parameters: ToolParameters;
+  reason: string;
+  status: 'pending' | 'approved' | 'rejected' | 'executing' | 'completed' | 'failed';
+  result?: ToolResult;
+  error?: string;
+  createdAt: number;
+  executedAt?: number;
+}
+
+// Résultat d'exécution d'un outil
+export interface ToolResult {
+  success: boolean;
+  data?: unknown;
+  error?: string;
+  metadata?: {
+    source?: string;
+    timestamp: number;
+    durationMs: number;
+  };
+}
+
+// Événement d'exécution pour le streaming
+export interface ExecutionEvent {
+  type: 'plan' | 'tool_call' | 'tool_result' | 'status_change' | 'error' | 'complete';
+  timestamp: number;
+  data: unknown;
+}
+
+// État d'exécution complet (pour polling/streaming)
+export interface ExecutionState {
+  sessionId: string;
+  status: AgentStatus;
+  plan?: ResearchPlan;
+  pendingToolCalls: PendingToolCall[];
+  completedToolCalls: PendingToolCall[];
+  currentStep: number;
+  totalSteps: number;
+  error?: string;
+  startedAt: number;
+  updatedAt: number;
+}
+
+// Payload pour approuver/rejeter un outil
+export interface ToolApprovalPayload {
+  toolCallId: string;
+  approved: boolean;
+  modifiedParameters?: ToolParameters;
+}
+
 // Payload envoyé par le client à l'API
 export interface PlanRequestPayload {
   userPrompt: string;
   model?: string;
+}
+
+// Payload pour continuer l'exécution après approbation
+export interface ContinueExecutionPayload {
+  sessionId: string;
+  approvals: ToolApprovalPayload[];
 }
 
 // Conversation persistée pour l'historique dans le menu burger
@@ -65,6 +139,8 @@ export interface ConversationItem {
   model: string;
   plan: ResearchPlan;
   createdAt: number;
+  // V2: État d'exécution complet
+  executionState?: ExecutionState;
 }
 
 // Réponse renvoyée par l'API interne
@@ -74,4 +150,8 @@ export interface PlanApiResponse {
   error?: string;
   errorCode?: string;
   retryable?: boolean;
+  // V2: Session ID pour continuer l'exécution
+  sessionId?: string;
+  // V2: État initial d'exécution
+  executionState?: ExecutionState;
 }
