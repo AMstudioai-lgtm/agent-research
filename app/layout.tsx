@@ -1,25 +1,38 @@
-import type {Metadata} from 'next';
-import './globals.css'; // Global styles
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
+import './globals.css';
+
+const geistSans = Geist({
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+});
+
+const geistMono = Geist_Mono({
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+});
 
 export const metadata: Metadata = {
   title: 'Research Agent',
-  description: 'Interface pédagogique d\'un agent de recherche préparant et structurant des plans de recherche avant exécution.',
+  description: 'Mission Control de recherche méthodique propulsé par Gemini et Google ADK.',
   openGraph: {
     title: 'Research Agent',
-    description: 'Interface pédagogique d\'un agent de recherche préparant et structurant des plans de recherche avant exécution.',
+    description: 'Mission Control de recherche méthodique propulsé par Gemini et Google ADK.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Research Agent',
-    description: 'Interface pédagogique d\'un agent de recherche préparant et structurant des plans de recherche avant exécution.',
+    description: 'Mission Control de recherche méthodique propulsé par Gemini et Google ADK.',
   },
 };
 
-export default function RootLayout({children}: {children: React.ReactNode}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body suppressHydrationWarning>{children}</body>
+    <html lang="fr" className={`dark ${geistSans.variable} ${geistMono.variable}`}>
+      <body className="min-h-[100dvh] bg-[#0A0A0A] text-[#E5E5E5] antialiased selection:bg-[#3B82F6] selection:text-white" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }

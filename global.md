@@ -1,43 +1,46 @@
 # Feuille de route globale — Research Agent (Google ADK)
 
 ## Statut actuel du projet
-* **Version en cours** : V1 — Complétée (Phase 1 : Refacto architecture & résilience)
-* **Étape active** : Termination de la Phase 1 — Vérification de la robustesse, corrections de fallback et migration UI
-* **Modèle IA sous-jacent** : `gemini-3.6-flash` (défaut), avec fallback automatique vers `gemini-3.5-flash`, `gemini-3.7-flash`, `gemini-flash-latest`, `gemini-3.8-flash` en cas de forte demande temporaire
-* **Cadre technique** : Next.js 15, Google ADK (`@google/adk`), TypeScript strict. Nouveaux modules : `lib/config/models.ts`, `lib/agent/fallback-policy.ts`, `lib/agent/plan-parser.ts`, `lib/agent/runner-service.ts`
+* **Version en cours** : V2.1 — Sortie Structurée DeepResearch & Ancrage 2026
+* **Étape active** : Module accompli avec succès (Rapport DeepResearch exclusif dans l'espace réponse, traçabilité dans le Thinking, ancrage 2026 et validation humaine du plan)
+* **Modèle IA sous-jacent** : `gemini-3.5-flash` (modèle exclusif, aucun switch automatique)
+* **Cadre technique** : Next.js 15, Google ADK (`@google/adk`), TypeScript strict, Tailwind CSS, Bun
 
 ---
 
-## Roadmap des versions
+## Alignement Visuel avec les Spécifications (Template & Wireframe)
 
-### Version 1 — Complétée (Phase 1 & 2 de raffinement)
-*Objectif : Architecture résiliente, parsing strict, gestion d'erreurs contextuelle et design system de base.*
-* [x] **Étape 1.1** : Configuration de `@google/adk` et définition des types TypeScript (`types/agent.ts`).
-* [x] **Étape 1.2** : Implémentation du moteur agentique ADK (`LlmAgent`, `InMemoryRunner`) et de la route API `/api/agent/plan`.
-* [x] **Étape 1.3** : Développement de l'interface utilisateur unifiée (`app/page.tsx`) avec les 6 panneaux visuels distincts.
-* [x] **Étape 1.4** : Validation, vérifications anti-hallucination et tests de robustesse (build validé avec succès).
-* [x] **Étape 1.5** — **Refactoring résilience** : Politique de retry + fallback multi-modèles (ne plus échouer sur 503 uniquement).
-* [x] **Étape 1.6** — **Parsing et validation stricte** : Schéma JSON obligatoire, nettoyage output, verrous V1 (status=PLANIFIED, isBlocked=true).
-* [x] **Étape 1.7** — **Gestion d'erreurs contextuelle** : Codes erreurs (503, 429, NETWORK, PARSE) → messages utilisateur actionnables.
-* [x] **Étape 1.8** — **Design system de base** : Tokens centralisés (`lib/config/models.ts`), séparation modèle/config, état d'erreur enrichi.
+Conformément aux maquettes fournies par l'utilisateur :
+1. **Barre Supérieure (Top Bar)** :
+   - **Burger contenant les conversations** : Bouton carré aux coins arrondis à gauche ouvrant le drawer d'historique.
+   - **Nom de la conversation** : Pill horizontal aux bords arrondis au centre affichant le titre de la conversation en cours.
+   - Bouton d'action à droite pour démarrer une nouvelle conversation.
+2. **Corps de l'application (Flux de discussion)** :
+   - **Message envoyé** : Bulle de message utilisateur soignée, alignée à droite.
+   - **Log dépliable de l'agent ("ce qu'il est en train de faire")** : Bandeau horizontal dépliable sous le message avec indicateur d'état, chevron et détails de traçabilité.
+   - **Espace réponse** : Espace central épuré accueillant les résultats structurés (Statut officiel, Objectif, Action suivante Human-in-the-loop, Liste des tâches, Carnet de recherche et Diagnostics).
+3. **Pied de page fixé (Bottom Container)** :
+   - **Suggestions** : Pilules horizontales positionnées juste au-dessus du champ pour lancer des recherches types.
+   - **Champ texte** : Grand conteneur rectangulaire encadré et arrondi avec textarea auto-extensible.
+   - **Espace de sélection modèle** : Pill situé en bas à gauche à l'intérieur du champ texte affichant `Gemini 3.5 Flash` et un mini-popover descriptif.
+   - **Bouton d'envoi** : Bouton carré aux coins arrondis situé en bas à droite à l'intérieur du champ texte avec icône de flèche (`→`).
 
-### Version 2 — Intégration d'Outils Réels & Contrôle Humain (À venir)
-*Objectif : Connecter les premiers outils ADK avec validation humaine avant chaque exécution.*
-* [ ] **Étape 2.1** : Déclaration de `FunctionTool` ADK (`search_web`, `read_document`, `save_result`).
-* [ ] **Étape 2.2** : Interface d'autorisation utilisateur ("Human-in-the-loop") avant déclenchement d'un outil.
-* [ ] **Étape 2.3** : Exécution réelle des outils et affichage des données brutes vérifiables.
-* [ ] **Étape 2.4** : Transition d'état de l'agent (`PLANIFIÉ` → `EN_COURS` → `TERMINÉ`).
+---
 
-### Version 3 — Boucle Agentique Autonome & Mémoire (À venir)
-*Objectif : Boucle ReAct complète avec orchestration multi-tours et persistance.*
-* [ ] **Étape 3.1** : Orchestration avec les agents de flux ADK (`SequentialAgent`, `LoopAgent`).
-* [ ] **Étape 3.2** : Évaluation autonome du critère d'arrêt et auto-correction.
-* [ ] **Étape 3.3** : Persistance de session et historique de recherche.
+## Architecture des Fichiers
 
-### Version 4 — Design System Visuel & Expérience Utilisateur (Planifié)
-*Objectif : Interface soignée conforme à la maquette fournie, composants réutilisables et design system complet.*
-* [ ] **Étape 4.1** : Création du design system tokens (`colors`, `spacing`, `radius`, `shadows`, `typography`).
-* [ ] **Étape 4.2** : Composants UI de base (`Button`, `Card`, `Input`, `Select`, `Badge`, `Drawer`, `Toast`, `Spinner`).
-* [ ] **Étape 4.3** : Remplacement des styles Tailwind ad hoc par les tokens définis.
-* [ ] **Étape 4.4** : Refactor des 6 panneaux de résultat en composants dédiés (`ObjectiveCard`, `TasksList`, `InfoGrid`, `ToolsGrid`, `StoppingCriteriaCard`, `NextActionCard`).
-* [ ] **Étape 4.5** : Améliorations UX : états de chargement, notifications de fallback, sélecteur de modèle interactif.
+* **`lib/config/models.ts`** : Modèle fixe exclusif `gemini-3.5-flash`.
+* **`lib/agent/research-agent.ts`** : Configuration de l'agent `LlmAgent` Google ADK.
+* **`lib/agent/runner.ts`** : Exécution via `InMemoryRunner`.
+* **`lib/agent/fallback.ts`** : Génération de secours déterministe isolée.
+* **`lib/agent/tools.ts`** : Outils réels ADK (`search_web`, `read_document`, `save_result`).
+* **`components/`** :
+  - `Header.tsx` : Burger, pill du nom de conversation, nouvelle recherche.
+  - `Sidebar.tsx` : Tiroir coulissant des conversations.
+  - `UserMessage.tsx` : Bulle "Message envoyé" alignée à droite.
+  - `AgentLogBar.tsx` : "Log dépliable de l'agent, ce qu'il est en train de faire".
+  - `ResponseSpace.tsx` : "Espace réponse" avec les composants modulaires.
+  - `Suggestions.tsx` : Pilules de suggestions au-dessus du champ texte.
+  - `BottomInput.tsx` : "Champ texte" avec "Espace de sélection modèle" et "Bouton d'envoie".
+  - `StatusBanner.tsx`, `NextActionCard.tsx`, `TaskList.tsx`, `SavedNotesCard.tsx`, `ExecutionHistoryCard.tsx`, `RequiredInfoCard.tsx`, `RequiredToolsCard.tsx`.
+* **`app/page.tsx`** : Assemblage clair et responsive.

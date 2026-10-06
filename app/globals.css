@@ -1,1 +1,56 @@
 @import "tailwindcss";
+
+@layer base {
+  :root {
+    --noir-primary: #0a0a0a;
+    --noir-elevated: #111111;
+    --gris-card: #1a1a1a;
+    --gris-border: #2a2a2a;
+    --gris-hover: #333333;
+    --steel-text: #a3a3a3;
+    --steel-muted: #737373;
+    --pure-white: #ffffff;
+    --off-white: #e5e5e5;
+    --electric-blue: #3b82f6;
+    --electric-blue-muted: #1e3a5f;
+    --emerald-success: #10b981;
+    --amber-warning: #f59e0b;
+    --rose-error: #e11d48;
+  }
+
+  * {
+    border-color: #2a2a2a;
+  }
+
+  body {
+    background-color: #0a0a0a;
+    color: #e5e5e5;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background-color: #3b82f6;
+    color: #ffffff;
+  }
+}
+
+/* Custom Scrollbars (Clinical Noir) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2a2a2a;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #333333;
+}

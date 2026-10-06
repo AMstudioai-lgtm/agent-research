@@ -1,14 +1,26 @@
-// Statuts de l'agent dans son cycle de vie (V1: PLANIFIÉ, V2+: EN_COURS, EN_ATTENTE_INFO, TERMINÉ)
+// Types stricts et propres pour le Research Agent (Google ADK)
+
 export type AgentStatus = 'PLANIFIÉ' | 'EN_COURS' | 'EN_ATTENTE_INFO' | 'TERMINÉ';
+
+// Pensée ou réflexion unitaire de l'agent au cours de son processus
+export interface AgentThought {
+  id: string;
+  timestamp: number;
+  category: 'REASONING' | 'SEARCH' | 'ANALYSIS' | 'DECISION' | 'SYNTHESIS';
+  content: string;
+  phase?: string;
+}
 
 // Tâche individuelle séquentielle identifiée par l'agent
 export interface PlannedTask {
   id: number;
   description: string;
   expectedOutput: string;
+  isCompleted?: boolean;
+  executionResult?: string;
 }
 
-// Outil théorique requis pour accomplir une partie de la recherche
+// Outil requis pour accomplir une partie de la recherche
 export interface RequiredTool {
   name: string;
   reason: string;
@@ -21,117 +33,73 @@ export interface RequiredInformation {
   missing: string[];
 }
 
-// Prochaine action logique que l'agent exécuterait si un outil était disponible
+// Prochaine action logique à exécuter
 export interface NextAction {
   action: string;
-  targetTool: string;
+  targetTool: 'search_web' | 'read_document' | 'save_result' | string;
+  parameters?: Record<string, unknown>;
   isBlocked: boolean;
   blockReason?: string;
 }
 
-// Plan de recherche complet et structuré généré par le LlmAgent Google ADK
+// Résultat d'exécution d'un outil
+export interface ToolExecutionOutput {
+  toolName: string;
+  timestamp: number;
+  inputParams: Record<string, unknown>;
+  status: 'SUCCESS' | 'ERROR';
+  data: unknown;
+  summary: string;
+  error?: string;
+}
+
+// Note enregistrée dans le carnet de recherche
+export interface SavedResearchNote {
+  id: string;
+  topic: string;
+  sourceUrl?: string;
+  sourceTitle?: string;
+  content: string;
+  savedAt: number;
+}
+
+// Plan de recherche complet et structuré
 export interface ResearchPlan {
-  // 1. Demande originale & Objectif clarifié
   objective: string;
-  // 2. Plan découpé en tâches
   tasks: PlannedTask[];
-  // 3. Informations nécessaires (disponibles et manquantes)
   requiredInformation: RequiredInformation;
-  // 4. Outils nécessaires identifiés
   requiredTools: RequiredTool[];
-  // 5. Critère d'arrêt objectif
   stoppingCriteria: string;
-  // 6. Action suivante immédiate
   nextAction: NextAction;
-  // 7. État officiel de l'agent
   status: AgentStatus;
-  // Modèle d'IA utilisé
   modelUsed?: string;
-  // Notification facultative si un basculement de modèle a été nécessaire en cas de forte demande
+  thoughts?: AgentThought[];
+  executionHistory?: ToolExecutionOutput[];
+  savedNotes?: SavedResearchNote[];
+  answer?: string;
   fallbackNotice?: string;
 }
 
-// ==================== V2: Outils réels & Human-in-the-loop ====================
-
-// Outils disponibles pour l'agent
-export type ToolName = 'search_web' | 'read_document' | 'save_result' | 'query_database';
-
-// Paramètres d'un appel d'outil
-export interface ToolParameters {
-  query?: string;
-  url?: string;
-  limit?: number;
-  key?: string;
-  data?: unknown;
-  [key: string]: unknown;
-}
-
-// Appel d'outil en attente d'approbation
-export interface PendingToolCall {
-  id: string;
-  name: ToolName;
-  parameters: ToolParameters;
-  reason: string;
-  status: 'pending' | 'approved' | 'rejected' | 'executing' | 'completed' | 'failed';
-  result?: ToolResult;
-  error?: string;
-  createdAt: number;
-  executedAt?: number;
-}
-
-// Résultat d'exécution d'un outil
-export interface ToolResult {
-  success: boolean;
-  data?: unknown;
-  error?: string;
-  metadata?: {
-    source?: string;
-    timestamp: number;
-    durationMs: number;
-  };
-}
-
-// Événement d'exécution pour le streaming
-export interface ExecutionEvent {
-  type: 'plan' | 'tool_call' | 'tool_result' | 'status_change' | 'error' | 'complete';
-  timestamp: number;
-  data: unknown;
-}
-
-// État d'exécution complet (pour polling/streaming)
-export interface ExecutionState {
-  sessionId: string;
-  status: AgentStatus;
-  plan?: ResearchPlan;
-  pendingToolCalls: PendingToolCall[];
-  completedToolCalls: PendingToolCall[];
-  currentStep: number;
-  totalSteps: number;
-  error?: string;
-  startedAt: number;
-  updatedAt: number;
-}
-
-// Payload pour approuver/rejeter un outil
-export interface ToolApprovalPayload {
-  toolCallId: string;
-  approved: boolean;
-  modifiedParameters?: ToolParameters;
-}
-
-// Payload envoyé par le client à l'API
+// Payload pour générer le plan
 export interface PlanRequestPayload {
   userPrompt: string;
-  model?: string;
 }
 
-// Payload pour continuer l'exécution après approbation
-export interface ContinueExecutionPayload {
-  sessionId: string;
-  approvals: ToolApprovalPayload[];
+// Payload pour exécuter un outil
+export interface ExecuteToolPayload {
+  toolName: 'search_web' | 'read_document' | 'save_result' | string;
+  parameters: Record<string, unknown>;
+  taskId?: number;
 }
 
-// Conversation persistée pour l'historique dans le menu burger
+// Payload pour générer la réponse textuelle
+export interface GenerateAnswerPayload {
+  userPrompt: string;
+  objective: string;
+  contextData?: string;
+}
+
+// Conversation persistée pour l'historique
 export interface ConversationItem {
   id: string;
   title: string;
@@ -139,19 +107,25 @@ export interface ConversationItem {
   model: string;
   plan: ResearchPlan;
   createdAt: number;
-  // V2: État d'exécution complet
-  executionState?: ExecutionState;
 }
 
-// Réponse renvoyée par l'API interne
+// Réponse renvoyée par l'API de planification
 export interface PlanApiResponse {
   success: boolean;
   data?: ResearchPlan;
   error?: string;
-  errorCode?: string;
-  retryable?: boolean;
-  // V2: Session ID pour continuer l'exécution
-  sessionId?: string;
-  // V2: État initial d'exécution
-  executionState?: ExecutionState;
+}
+
+// Réponse renvoyée par l'API d'exécution d'outil
+export interface ExecuteToolApiResponse {
+  success: boolean;
+  data?: ToolExecutionOutput;
+  error?: string;
+}
+
+// Réponse renvoyée par l'API de réponse textuelle
+export interface AnswerApiResponse {
+  success: boolean;
+  answer?: string;
+  error?: string;
 }

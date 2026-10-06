@@ -45,19 +45,19 @@ export const TextAnswerCard: React.FC<TextAnswerCardProps> = ({ answer }) => {
         >
           {copied ? (
             <>
-            <Check className="h-3 w-3 text-[#10B981]" />
-              <span className="text-[#10B981]">Copi�é</span>
+              <Check className="h-3 w-3 text-[#10B981]" />
+              <span className="text-[#10B981]">Copié</span>
             </>
           ) : (
             <>
               <Copy className="h-3 w-3" />
               <span>Copier le rapport</span>
             </>
-            )}
+          )}
         </motion.button>
       </div>
 
-      <div className="prose prose-innert max-w-none text-sm text-[#E5E5E5] leading-relaxed space-y-3 font-sans">
+      <div className="prose prose-invert max-w-none text-sm text-[#E5E5E5] leading-relaxed space-y-3 font-sans">
         <Markdown
           components={{
             h1: ({ children }) => (
@@ -81,13 +81,13 @@ export const TextAnswerCard: React.FC<TextAnswerCardProps> = ({ answer }) => {
               </p>
             ),
             ul: ({ children }) => (
-              <ul className="list-disc pl-5 my-2 space-y-1" text-[#E5E5E5]">
+              <ul className="list-disc pl-5 my-2 space-y-1 text-[#E5E5E5]">
                 {children}
               </ul>
             ),
             ol: ({ children }) => (
-              <ol className="list-decimal pl-5 my-2 space-y-1" text-[#E5E5E5]">
-               {children}
+              <ol className="list-decimal pl-5 my-2 space-y-1 text-[#E5E5E5]">
+                {children}
               </ol>
             ),
             li: ({ children }) => (
